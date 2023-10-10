@@ -1,0 +1,26 @@
+package main
+
+import (
+	"database/sql"
+	"log"
+
+	_ "github.com/mattn/go-sqlite3"
+)
+
+func main() {
+	db, _ := sql.Open("sqlite3", "gee.db")
+	defer func() { _ = db.Close() }()
+	_, _ = db.Exec("DROP TABLE IF EXISTS User;")
+	_, _ = db.Exec("CREATE TABLE User(Name text);")
+	result, err := db.Exec("INSERT INTO User(`Name`) values (?), (?)", "Tom", "Sam")
+	if err == nil {
+		affected, _ := result.RowsAffected()
+		log.Println(affected)
+	}
+	row := db.QueryRow("SELECT Name FROM User LIMIT 1") //Query and QueryRow前者可以返回多条记录，后者只返回一条记录。
+	var name string
+	if err := row.Scan(&name); err == nil { //row.Scan()接受1或多个指针作为参数，可以获取对应列(column)的值
+		//接受1或多个指针作为参数，可以获取对应列(column)的值，在这个示例中，只有 Name 一列，因此传入字符串指针 &name 即可获取到查询的结果。
+		log.Println(name)
+	}
+}
