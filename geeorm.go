@@ -3,12 +3,14 @@ package geeorm
 //那交互前的准备工作（比如连接/测试数据库），交互后的收尾工作（关闭连接）等就交给 Engine 来负责了
 import (
 	"database/sql"
+	"geeorm/dialect"
 	"geeorm/log"
 	"geeorm/session"
 )
 
 type Engine struct {
-	db *sql.DB
+	db      *sql.DB
+	dialect dialect.Dialect
 }
 
 // Engine 的逻辑非常简单，最重要的方法是 NewEngine
@@ -24,7 +26,13 @@ func NewEngine(driver, source string) (e *Engine, err error) {
 		log.Error(err)
 		return
 	}
-	e = &Engine{db: db}
+	// make sure the specific dialect exists
+	dial, ok := dialect.GetDialect(driver)
+	if !ok {
+		log.Errorf("dialect %s Not Found", driver)
+		return
+	}
+	e = &Engine{db: db, dialect: dial}
 	log.Info("connect database success")
 	return
 }
@@ -37,5 +45,5 @@ func (engine *Engine) Close() {
 }
 
 func (engine *Engine) NewSession() *session.Session {
-	return session.New(engine.db)
+	return session.New(engine.db, engine.dialect)
 }

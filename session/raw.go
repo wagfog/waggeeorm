@@ -1,20 +1,29 @@
 package session
 
-//Session 负责与数据库的交互
+//day1 Session 负责与数据库的交互
+//day2 我们将数据库表的增/删操作实现在子包 session 中.在此之前，Session 的结构需要做一些调整
 import (
 	"database/sql"
+	"geeorm/dialect"
 	"geeorm/log"
+	"geeorm/schema"
 	"strings"
 )
 
 type Session struct {
-	db      *sql.DB         //第一个是 db *sql.DB，即使用 sql.Open() 方法连接数据库成功之后返回的指针。
-	sql     strings.Builder //第二个和第三个成员变量用来拼接 SQL 语句和 SQL 语句中占位符的对应值
-	sqlVars []interface{}
+	db       *sql.DB         //第一个是 db *sql.DB，即使用 sql.Open() 方法连接数据库成功之后返回的指针。
+	sql      strings.Builder //第二个和第三个成员变量用来拼接 SQL 语句和 SQL 语句中占位符的对应值
+	sqlVars  []interface{}
+	dialect  dialect.Dialect
+	refTable *schema.Schema
 }
 
-func New(db *sql.DB) *Session {
-	return &Session{db: db}
+func New(db *sql.DB, dialect dialect.Dialect) *Session {
+	return &Session{
+		db:      db,
+		dialect: dialect,
+		// sqlVars: make([]interface{}, 0),
+	}
 }
 
 func (s *Session) Clear() {
@@ -30,6 +39,9 @@ func (s *Session) Raw(sql string, values ...interface{}) *Session {
 	s.sql.WriteString(sql)
 	s.sql.WriteString(" ")
 	s.sqlVars = append(s.sqlVars, values...)
+	if s.sqlVars == nil {
+		log.Info("something happend")
+	}
 	return s
 }
 
