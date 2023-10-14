@@ -4,6 +4,7 @@ package session
 //day2 我们将数据库表的增/删操作实现在子包 session 中.在此之前，Session 的结构需要做一些调整
 import (
 	"database/sql"
+	"geeorm/clause"
 	"geeorm/dialect"
 	"geeorm/log"
 	"geeorm/schema"
@@ -16,6 +17,7 @@ type Session struct {
 	sqlVars  []interface{}
 	dialect  dialect.Dialect
 	refTable *schema.Schema
+	clause   clause.Clause
 }
 
 func New(db *sql.DB, dialect dialect.Dialect) *Session {
@@ -29,6 +31,7 @@ func New(db *sql.DB, dialect dialect.Dialect) *Session {
 func (s *Session) Clear() {
 	s.sql.Reset()
 	s.sqlVars = nil
+	s.clause = clause.Clause{}
 }
 
 func (s *Session) DB() *sql.DB {
